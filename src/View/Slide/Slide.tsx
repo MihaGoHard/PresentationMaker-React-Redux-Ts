@@ -32,6 +32,8 @@ interface SlideProps  {
 function MainSlide(props: SlideProps) {
 
     useDeleteSelectedElems(props.selectedElements, props.deleteSelectedElements)
+
+    //test comment
   
     let currSlide: Slide = props.slides[props.numberOfSlide]
     const modelSlideBackground = currSlide.background
