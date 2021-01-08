@@ -33,7 +33,7 @@ function MainSlide(props: SlideProps) {
 
     useDeleteSelectedElems(props.selectedElements, props.deleteSelectedElements)
 
-    //test comment
+    //test comment 2
   
     let currSlide: Slide = props.slides[props.numberOfSlide]
     const modelSlideBackground = currSlide.background
