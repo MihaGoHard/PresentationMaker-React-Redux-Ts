@@ -4,8 +4,9 @@ import { MainProg, Programm, Slide} from '../../Models/CommonFunctions/types'
 import { getSlideBackground, getSlideSvgElems, getDivSvgClassNames, } from '../commonViewFunctions';
 import { useDragAndDropSlides, useLighSlideInsertPlace  } from '../../CustomHooks/SlideMouseEvents';
 import { connect } from 'react-redux';
-import { moveSlide, setSelectedElement, setCanDeleteSlide, removeOneElemFromSelectedSlides, setSelectedSlides } from '../../Models/ActionCreators/actionCreators';
+import { moveSlide, deleteSelectedElements, setSelectedElement, setCanDeleteSlide, removeOneElemFromSelectedSlides, setSelectedSlides } from '../../Models/ActionCreators/actionCreators';
 import { saveStateToArchive } from '../../Models/CommonFunctions/archive';
+import { useDeleteSelectedElems, useDeleteSelectedSlides } from '../../CustomHooks/CommonMouseKeyboardEvents';
 
 
 
@@ -23,11 +24,14 @@ interface SlideProps  {
     setCanDeleteSlide: (canDelete: boolean) => void,
     removeOneElemFromSelectedSlides: (slideId: string) => void,
     setSelectedElement: (elemsArr: Array<string>) => void,
+    deleteSelectedElements: () => void,
 }
 
 
 
 function MainSlide(props: SlideProps) {
+
+    useDeleteSelectedElems(props.selectedElements, props.deleteSelectedElements)
   
     let currSlide: Slide = props.slides[props.numberOfSlide]
     const modelSlideBackground = currSlide.background
@@ -84,7 +88,8 @@ function MainSlide(props: SlideProps) {
       setSelectedSlides,
       setCanDeleteSlide,
       removeOneElemFromSelectedSlides,
-      setSelectedElement
+      setSelectedElement,
+      deleteSelectedElements
   }
   
   const mapStateToProps = (state: Programm) => ({

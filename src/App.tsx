@@ -29,7 +29,6 @@ interface AppProps {
 
 function App(props: AppProps) {
 
-  useDeleteSelectedElems(props.selectedElements, props.deleteSelectedElements)
   useDeleteSelectedSlides(props.canDeleteSlides, props.deleteSlide)
   useMouseDownDocumentListner({
     canDeleteSlides: props.canDeleteSlides,
