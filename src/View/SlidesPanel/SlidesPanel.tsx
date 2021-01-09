@@ -15,6 +15,7 @@ function SlidesPanel(props: slidesPanelProps) {
 
   const slidesPanelRef = useRef<HTMLDivElement | null>(null)
 
+
   const slidesList = getListSlides({
       slideBorderLight: props.slideBorderLight, 
       slides: props.slides, 

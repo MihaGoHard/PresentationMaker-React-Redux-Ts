@@ -8,7 +8,7 @@ import { OutlineRect,  ImgTextObject, ShapeObject } from './SvgElems'
 import { useNormalizeElemSize } from '../../CustomHooks/CommonDifferentHooks'
 import { Dispatch } from 'redux'
 import { connect } from 'react-redux'
-import { changeElemPosition, resizeElement, setSelectedElement, setCanDeleteSlide, removeOneElemFromSelectedElems } from '../../Models/ActionCreators/actionCreators'
+import { changeElemPosition, resizeElement, changeTextObj, setSelectedElement, setCanDeleteSlide, removeOneElemFromSelectedElems } from '../../Models/ActionCreators/actionCreators'
 import { store } from '../..'
 import { Program } from 'typescript'
 
@@ -28,7 +28,7 @@ function SmallSlideElement(shape: PictureObj | TextObj | ShapeObj) {
   let svgElem: JSX.Element = <rect/>
   let outLineRect: JSX.Element = <rect />
 
-  if (shape.type === 'rect' || shape.type === 'triangle'  || shape.type === 'circle') {
+  if (shape.type === 'rect' || shape.type === 'triangle' || shape.type === 'circle') {
     svgElem = <ShapeObject 
       shape={shape}
       elemRef={elemRef}
@@ -50,6 +50,7 @@ function SmallSlideElement(shape: PictureObj | TextObj | ShapeObj) {
       height={height}
       outlineRect={outLineRect}
       isSmallElem={true}
+      changeTextObj={null}
     />
   }
 
@@ -66,6 +67,7 @@ interface BigSlideElementProps {
   setSelectedElement: (elemsArr: Array<string>) => void,
   changeElemPosition: (newX: number, newY: number, id: string) => void,
   resizeElement: (newWidth: number, newHeigth: number, newPosX: number, newPosY: number, id: string) => void,
+  changeTextObj: (newParams: {newParam: string, paramToChange: 'text' | 'fontSize' | 'fontFamily'}) => void,
   removeOneElemFromSelectedElems: (elemId: string) => void,
   shape: PictureObj | TextObj | ShapeObj,
   svgProps: React.MutableRefObject<SVGSVGElement | null>
@@ -174,6 +176,7 @@ function BigSlideElement(props: BigSlideElementProps) {
       height={elemSize.height}
       outlineRect={outLineRect}
       isSmallElem={false}
+      changeTextObj={props.changeTextObj}
     />
   }
   
@@ -187,7 +190,8 @@ const mapDispatchToProps = {
     setSelectedElement,
     changeElemPosition,
     resizeElement,
-    removeOneElemFromSelectedElems
+    removeOneElemFromSelectedElems,
+    changeTextObj
 }
 
 const mapStateToProps = (state: Programm) => {

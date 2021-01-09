@@ -1,6 +1,7 @@
-import React, { useEffect, useRef} from 'react'
+import React, { useEffect, useRef, useState} from 'react'
 import { connect } from 'react-redux'
-import { checkSelectedElem, searchChangedSlideIndex } from '../../Models/CommonFunctions/supportFunctionsConst'
+import { changeTextObj } from '../../Models/ActionCreators/actionCreators'
+import { checkSelectedElem, isTextObj, searchChangedSlideIndex } from '../../Models/CommonFunctions/supportFunctionsConst'
 
 import { PictureObj, TextObj, ShapeObj, MainProg, Programm} from '../../Models/CommonFunctions/types'
 import './Element.css'
@@ -144,20 +145,29 @@ interface ImgTextObjectProps {
   height: number
   outlineRect: JSX.Element
   isSmallElem: boolean
+  changeTextObj: ((newParams: {newParam: string, paramToChange: 'text' | 'fontSize' | 'fontFamily'}) => void) | null,
 }
-
+  
 
 function ImgTextObject(props: ImgTextObjectProps) {
   let svgElem: JSX.Element = <rect/>
   let htmlElem: any
+  //let textValue: string = ''
 
-
+  
+  
+  
 
   const inputRef = useRef<HTMLTextAreaElement | null>(null)
+
+
+  const [textValue, setTextValue] = useState('') 
+
   useEffect(() => {
-  if(props.shape.type === 'text'){ //&& checkSelectedElem(, props.shape.id)) {
-        inputRef.current?.focus()
-      }  
+    if(props.shape.type === 'text') { 
+      inputRef.current?.focus()
+      setTextValue(props.shape.text)
+    }  
   })
 
   if (props.shape.type === 'text') {
@@ -172,9 +182,12 @@ function ImgTextObject(props: ImgTextObjectProps) {
       <textarea
         readOnly={isReadOnly}
         ref={inputRef}
-        value={props.shape.text}
+        //value={textValue}
         onMouseDown={() => inputRef.current?.focus()}
-        //onChange={(event) => store.dispatch(changeTextObj({newParam: event.target.value, paramToChange: 'text'}))}
+        onChange={(event) => {
+            setTextValue(event.target.value);
+            changeTextObj({newParam: textValue, paramToChange: 'text'})}
+        }
         style={{
           width: props.width, 
           height: props.height, 
