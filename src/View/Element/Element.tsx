@@ -50,7 +50,6 @@ function SmallSlideElement(shape: PictureObj | TextObj | ShapeObj) {
       height={height}
       outlineRect={outLineRect}
       isSmallElem={true}
-      selectedElements={[]}
       changeTextObj={null}
     />
   }
@@ -177,7 +176,6 @@ function BigSlideElement(props: BigSlideElementProps) {
       height={elemSize.height}
       outlineRect={outLineRect}
       isSmallElem={false}
-      selectedElements={props.selectedElements}
       changeTextObj={props.changeTextObj}
     />
   }

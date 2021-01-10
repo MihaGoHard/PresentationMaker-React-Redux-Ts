@@ -146,7 +146,6 @@ interface ImgTextObjectProps {
   height: number
   outlineRect: JSX.Element
   isSmallElem: boolean
-  selectedElements: Array<string>
   changeTextObj: any
 }
   
