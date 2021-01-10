@@ -50,6 +50,7 @@ function SmallSlideElement(shape: PictureObj | TextObj | ShapeObj) {
       height={height}
       outlineRect={outLineRect}
       isSmallElem={true}
+      selectedElements={[]}
       changeTextObj={null}
     />
   }
@@ -67,7 +68,7 @@ interface BigSlideElementProps {
   setSelectedElement: (elemsArr: Array<string>) => void,
   changeElemPosition: (newX: number, newY: number, id: string) => void,
   resizeElement: (newWidth: number, newHeigth: number, newPosX: number, newPosY: number, id: string) => void,
-  changeTextObj: (newParams: {newParam: string, paramToChange: 'text' | 'fontSize' | 'fontFamily'}) => void,
+  changeTextObj: (newParams: {newParam: string, paramToChange: 'text' | 'fontSize' | 'fontFamily', id: string}) => void,
   removeOneElemFromSelectedElems: (elemId: string) => void,
   shape: PictureObj | TextObj | ShapeObj,
   svgProps: React.MutableRefObject<SVGSVGElement | null>
@@ -176,6 +177,7 @@ function BigSlideElement(props: BigSlideElementProps) {
       height={elemSize.height}
       outlineRect={outLineRect}
       isSmallElem={false}
+      selectedElements={props.selectedElements}
       changeTextObj={props.changeTextObj}
     />
   }

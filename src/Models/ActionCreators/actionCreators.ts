@@ -139,7 +139,8 @@ export function setSlideBackground(newBackground: Picture | Color) {
 }
 
 
-export function changeTextObj(newParams: {newParam: string, paramToChange: 'text' | 'fontSize' | 'fontFamily'}) {
+export function changeTextObj(newParams: {newParam: string, paramToChange: 'text' | 'fontSize' | 'fontFamily', id: string}) {
+  console.log(newParams.newParam)
   return {
     type: StateTypes.CHANGE_TEXT_OBJ,
     payload: newParams

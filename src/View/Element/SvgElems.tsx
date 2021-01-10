@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState} from 'react'
 import { connect } from 'react-redux'
+import { store } from '../..'
 import { changeTextObj } from '../../Models/ActionCreators/actionCreators'
 import { checkSelectedElem, isTextObj, searchChangedSlideIndex } from '../../Models/CommonFunctions/supportFunctionsConst'
 
@@ -145,30 +146,23 @@ interface ImgTextObjectProps {
   height: number
   outlineRect: JSX.Element
   isSmallElem: boolean
-  changeTextObj: ((newParams: {newParam: string, paramToChange: 'text' | 'fontSize' | 'fontFamily'}) => void) | null,
+  selectedElements: Array<string>
+  changeTextObj: any
 }
   
 
 function ImgTextObject(props: ImgTextObjectProps) {
   let svgElem: JSX.Element = <rect/>
   let htmlElem: any
-  //let textValue: string = ''
-
   
-  
-  
-
   const inputRef = useRef<HTMLTextAreaElement | null>(null)
 
-
-  const [textValue, setTextValue] = useState('') 
-
   useEffect(() => {
-    if(props.shape.type === 'text') { 
-      inputRef.current?.focus()
-      setTextValue(props.shape.text)
-    }  
-  })
+    if (isTextObj(props.shape)) {
+      props.elemRef.current?.focus()
+    }
+  }, [props.shape])
+    
 
   if (props.shape.type === 'text') {
     let fontSize = props.shape.fontSize
@@ -182,11 +176,10 @@ function ImgTextObject(props: ImgTextObjectProps) {
       <textarea
         readOnly={isReadOnly}
         ref={inputRef}
-        //value={textValue}
+        defaultValue={props.shape.text}
         onMouseDown={() => inputRef.current?.focus()}
-        onChange={(event) => {
-            setTextValue(event.target.value);
-            changeTextObj({newParam: textValue, paramToChange: 'text'})}
+        onBlur={
+          (event) => props.changeTextObj({newParam: event.target.value, paramToChange: 'text', id: props.shape.id})
         }
         style={{
           width: props.width, 

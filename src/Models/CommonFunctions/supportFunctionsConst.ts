@@ -137,6 +137,9 @@ function searchChangedElemIndexById(slides: Array<Slide>, changedSlideIndex: num
   return changedElemIndex
 }
 
+
+
+
 function getCurrElemPosition(slides: Array<Slide>, selectedSlides: Array<string>, id: string): Point {
   let elemX: number = 0
   let elemY: number = 0

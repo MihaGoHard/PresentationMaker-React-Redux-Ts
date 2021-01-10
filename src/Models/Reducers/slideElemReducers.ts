@@ -176,24 +176,29 @@ function re_addTextObj(state: MainProg, action: ActionType) {
 
 function re_changeTextObj(state: MainProg, action: ActionType) { 
   
+
   const paramToChange = action.payload.paramToChange
   const newParam = action.payload.newParam
+  const id = action.payload.id
 
   deepFreeze(state)
 
   const changedSlideIndex = searchChangedSlideIndex(state.currentPresentation.slides, state.selectedSlides)
-  const changedElemIndex = searchChangedElemIndex(state, changedSlideIndex)
+  const changedElemIndex = searchChangedElemIndexById(state.currentPresentation.slides, changedSlideIndex, id)
   
   let changedElem = getChangedElem(state.currentPresentation.slides, changedSlideIndex, changedElemIndex)
+  
   if (isTextObj(changedElem)) {
     changedElem = getNewTextElem(changedElem, newParam, paramToChange)
   }
+
 
   const changedElemsArr = getElemsWithChangedElem(state, changedSlideIndex, changedElemIndex, changedElem)
   const slideWithChangedElems = getSlideWithChangedElems(state, changedElemsArr, changedSlideIndex)
   
   const slidesWithChangedSlide = getSlidesWithChangedSlide(state, slideWithChangedElems, changedSlideIndex)
-
+  
+  
   return {
       ...state,
       currentPresentation: {
