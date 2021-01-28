@@ -1,72 +1,54 @@
-import React, { useEffect, useState } from 'react';
-import './MainPanel.css';
-import MainSlide from '../Slide/Slide';
+import React, { useContext } from 'react'
+import './MainPanel.css'
+import MainSlide from '../Slide/Slide'
+import { PopupContext } from '../Popup/Popup'
+import { connect } from 'react-redux'
+import { Programm, Slide } from '../../Models/types'
+import { searchChangedSlideIndex } from '../../Models/CommonFunctions/supportFunctions/supportSlideOperations'
 
-import { searchChangedSlideIndex } from '../../Models/CommonFunctions/supportFunctionsConst';
-import { globalActiveTool } from '../../Models/CommonFunctions/supportFunctionsConst'
-import { useSetPopup, useSetIsVisiblePopup } from '../Popup/PopupContext';
-import { PropsPopup } from '../Popup/Popup'
-import { connect } from 'react-redux';
-import { Programm, Slide } from '../../Models/CommonFunctions/types';
+interface MainPanelProps {
+  slides: Array<Slide>, 
+  selectedSlides: Array<string>
+}
 
+function MainPanel(props: MainPanelProps) {
+  const changedSlideIndex = searchChangedSlideIndex(props.slides, props.selectedSlides)
+  const {visible, setVisible, value, setValue} = useContext(PopupContext);
 
-function MainPanel(props: {slides: Array<Slide>, selectedSlides: Array<string>}) {
-    const changedSlideIndex = searchChangedSlideIndex(props.slides, props.selectedSlides)
-    const setPopup = useSetPopup();
-    const setIsVisible = useSetIsVisiblePopup(); 
+  const mouseUpHandler = () => {
+    setVisible(false);
+    document.removeEventListener('mousedown', mouseUpHandler);
+  }
 
-    let mainSlide: JSX.Element = 
-        <div className='MainSlide'>
-            <svg className='mainSlideSvg'/>    
-        </div>    
+  let mainSlide: JSX.Element = 
+    <div className='MainSlide'>
+        <svg className='mainSlideSvg'/>    
+    </div>    
 
-    if(props.slides.length !== 0)
-    {
-        mainSlide = <MainSlide numberOfSlide={changedSlideIndex} isSmallSlide={false} slidesPanelRef={null}/> 
-    }
+  if(props.slides.length !== 0) {
+    mainSlide = <MainSlide numberOfSlide={changedSlideIndex} isSmallSlide={false} slidesPanelRef={null}/> 
+  }
 
-    return (
-        <div className={"MainPanel "+(globalActiveTool != 0 ? "MainPanel_createElement" : "")} onClick={() => ''} 
-            onContextMenu={(e) => {
-                const defSubMenu: PropsPopup = {
-                    items: [
-                      {
-                          caption: '<Пусто>',
-                          action: () => {}
-                      },
-                    ],
-                    pos: {
-                      x: 0,
-                      y: 0,
-                    },
-                    width: 150,
-                };
-                e.preventDefault();
-                setPopup({...defSubMenu, 
-                    items: [
-                      {
-                          caption: 'Добавить слайд',
-                          action: () => {console.log('Добавить слайд')}
-                      },
-                      {
-                          caption: 'Сохранить',
-                          action: () => {console.log('Сохранить')}
-                      },
-                      {
-                        caption: 'Экспорт в PDF',
-                        action: () => {console.log('Экспорт в PDF')}
-                    },
-                    ],
-                    pos: {
-                      x: e.clientX,
-                      y: e.clientY,
-                    },
-                  }); setIsVisible(true)
-                
-            }}>    
-            {mainSlide}    
-        </div>
-    )
+  return (
+    <div className={"MainPanel "} onClick={() => ''} 
+      onContextMenu={(e) => {
+        e.preventDefault();
+        setValue({ 
+          items: [
+            {caption: 'Добавить слайд', action: () => {console.log('Добавить слайд')}},
+            {caption: 'Сохранить', action: () => {console.log('Сохранить')}},
+            {caption: 'Экспорт в PDF', action: () => {console.log('Экспорт в PDF')}},
+          ],
+          pos: {x: e.clientX, y: e.clientY},
+          width: 150
+        })
+        setVisible(true)
+        document.addEventListener('mousedown', mouseUpHandler)
+      }
+    }>    
+      { mainSlide }    
+    </div>
+  )
 }
 
 
@@ -76,4 +58,4 @@ const mapStateToProps = (state: Programm) => ({
     selectedSlides: state.mainProg.selectedSlides 
 })
 
-export default connect(mapStateToProps)(MainPanel);
+export default connect(mapStateToProps)(MainPanel)

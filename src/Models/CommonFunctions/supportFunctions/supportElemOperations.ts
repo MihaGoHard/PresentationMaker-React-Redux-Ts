@@ -1,42 +1,14 @@
-import { connect } from 'react-redux'
-
-import {
-  Programm,
-  MainProg,
-  Slide,
-  SlideId,
-  Point,
-  Picture,
-  PictureObj,
-  TextObj,
-  Color,
-  ShapeObj,
-  ChangedObjPosType,
-} from './types'
-
+import { MainProg, PictureObj, Point, ShapeObj, Slide, TextObj } from "../../types"
+import { createNewId } from "./commonOperations"
+import { searchChangedSlideIndex } from "./supportSlideOperations"
 
 export {
-  defaultPoint,
-  createNewId,
-  createSlideId,
-  checkSecondSlideIsBeyond,
-  searchChangedSlideIndexById,
+  createPictureObj,
+  createEmtyTextObj,
+  createShapeObj,
   searchChangedElemIndexById,
-  searchChangedSlideIndex,
   searchChangedElemIndex,
-  deepFreeze,
-  isProgramm,
-  isSlideId,
-  isTextObj,
-  isShapeObj,
-  isPictureObj,
-  isColor,
-  isSlide,
-  isPoint,
-  isChangedElemPosType,
   checkSelectedElem,
-  getSlidesWithoutChangedSlide,
-  getChangedSlideObj,
   getNewTextElem,
   getElemsWithoutChangedElem,
   getElemsWithNewElem,
@@ -44,74 +16,65 @@ export {
   getNewShapeElem,
   getNewResizedElem,
   getNewElemWithNewPosition,
-  getSlideWithNewBackground,
-  getSlidesWithChangedSlide,
   getElemsWithChangedElem,
   getCurrElemPosition,
-  getCurrElemSize
+  getCurrElemSize,
+  getAllElemsIdArr,
+  getElemByIdToPalette
 }
 
+function createPictureObj(width: number, height: number, imgB64: string): PictureObj {
+  return {
+    id: createNewId(),
+    position: {
+      x: 10,
+      y: 10 
+    },
+    height: height,
+    wigth: width,
+    type: 'picture',
+    imgB64,
+    fillColor: 'none',
+    borderColor: 'unset',
+    borderWidth: 1
+  }
+}
 
-export let globalActiveTool: number = 0;
+function createEmtyTextObj(): TextObj {
+  return {
+    id: createNewId(),
+    position: {
+      x: 10,
+      y: 10
+    },
+    height: 100,
+    wigth: 300,
+    text: "",
+    fillColor: 'rgba(189, 183, 107, 0.2)',
+    borderColor: 'unset',
+    borderWidth: 1,
+    fontFamily: 'Oblique',
+    fontSize: '50',
+    textColor: 'black',
+    type: 'text'
+  }
+}
 
-export function setGlobalActiveTool(state: number): void {
-    globalActiveTool = state;
+function createShapeObj(type: 'rect' | 'triangle' | 'circle'): ShapeObj {
+  return {
+    id: createNewId(),
+    position: {
+      x: 20,
+      y: 20
+    },
+    wigth: 200,
+    height: 200,
+    borderColor: 'rgba(189, 183, 107, 0.5)',
+    borderWidth: 1,
+    fillColor: 'rgba(189, 183, 107, 0.5)',
+    type
+  }
 } 
-
-
-const defaultPoint: Point = {
-  x: 10,
-  y: 10 
-}
-
-function createNewId(): string {
-  const max = 300
-  const min = 10
-  const randomNum = Math.floor(Math.random() * (max - min)) + min
-  const newId = String((new Date()).getTime() % 10 ** 8 + randomNum)
-  return newId
-}
-
-function createSlideId(isSmallSlide: boolean): string {
-  let id: string = createNewId()
-  if (isSmallSlide) {
-    id += '.small'
-  }
-  return id
-}
-
-function checkSecondSlideIsBeyond(slides: Array<Slide>, firstSlideId: string, secondSlideId: string): boolean {
-  let secondSlideIsBeyond = false;
-  const firstSlideIndex = searchChangedSlideIndexById(slides, firstSlideId)
-  const secondSlideIndex = searchChangedSlideIndexById(slides, secondSlideId)
-  if (secondSlideIndex > firstSlideIndex) {
-    secondSlideIsBeyond = true
-  }
-  return secondSlideIsBeyond
-}
-
-function searchChangedSlideIndexById(slides: Array<Slide>, id: string): number {
-  const searchSlideId = id
-  let changedSlideIndex: number = 0
-  for (let i = 0; i < slides.length; i++) {     
-      if (slides[i].id == searchSlideId) {
-          changedSlideIndex = i
-      }
-  }
-  return changedSlideIndex
-}
-
-
-function searchChangedSlideIndex(slides: Array<Slide>, selectedSlides: Array<string>): number {
-  const selectedSlide = selectedSlides[0]
-  let changedSlideIndex: number = 0
-  for (let i = 0; i < slides.length; i++) {     
-      if (slides[i].id == selectedSlide) {
-          changedSlideIndex = i
-      }
-  }
-  return changedSlideIndex
-}
 
 
 function searchChangedElemIndex(prog: MainProg, changedSlideIndex: number): number {
@@ -138,6 +101,15 @@ function searchChangedElemIndexById(slides: Array<Slide>, changedSlideIndex: num
 }
 
 
+function getElemByIdToPalette(slides: Array<Slide>, elementId: string): PictureObj | ShapeObj | TextObj | null {
+  for (let j = 0; j < slides.length; j++) {
+    for (let i = 0; i < slides[j].elements.length; i++) {
+      if (slides[j].elements[i].id == elementId)
+        return slides[j].elements[i];
+    }
+  }
+  return null
+}
 
 
 function getCurrElemPosition(slides: Array<Slide>, selectedSlides: Array<string>, id: string): Point {
@@ -155,6 +127,7 @@ function getCurrElemPosition(slides: Array<Slide>, selectedSlides: Array<string>
     y: elemY
   }
 }
+
 
 function getCurrElemSize(slides: Array<Slide>, selectedSlides: Array<string>, id: string): {width: number, height: number} {
   
@@ -185,68 +158,8 @@ function checkSelectedElem(selectedElements: Array<String>, currElemId: string):
   return elemIsSelected
 }
 
-function deepFreeze (o: any) {
-  Object.freeze(o);
 
-  Object.getOwnPropertyNames(o).forEach(function (prop) {
-    if (o.hasOwnProperty(prop)
-    && o[prop] !== null
-    && (typeof o[prop] === "object" || typeof o[prop] === "function")
-    && !Object.isFrozen(o[prop])) {
-      deepFreeze(o[prop]);
-    }
-  });
-  
-  return o;
-};
-
-function isProgramm(elem: any): elem is MainProg {
-  return elem.currentPresentation !== undefined
-}
-
-function isSlideId(elem: any): elem is SlideId {
-  return typeof elem == "string"
-}
-
-function isSlide(elem: any): elem is Slide {
-  return elem.elements !== undefined
-}
-
-function isTextObj(elem: any): elem is TextObj {
-  return elem.text !== undefined && elem.fontFamily !== undefined;
-}
-
-function isShapeObj(elem: any): elem is ShapeObj {
-  return elem.borderColor !== undefined && elem.fillColor !== undefined;
-}
-
-function isPictureObj(elem: any): elem is PictureObj {
-  return elem.url !== undefined
-}
-
-function isColor(elem: any): elem is Color {
-  return elem.hexColor !== undefined
-}
-
-function isPoint(elem: any): elem is Point {
-  return elem.x !== undefined
-}
-
-function isChangedElemPosType(obj: any): obj is {newX: number, newY: number, id: string} {
-  return obj.newX !== undefined && obj.newY !== undefined && obj.id !== undefined
-}
-
-
-function getChangedSlideObj(prog: MainProg, changedSlideIndex: number): Slide {
-  return {...prog.currentPresentation.slides[changedSlideIndex]}
-}
-
-function getSlidesWithoutChangedSlide(prog: MainProg, changedSlideIndex: number): Array<Slide> {
-  return [...prog.currentPresentation.slides.filter((elem) => elem != prog.currentPresentation.slides[changedSlideIndex])]
-}
-
-
-function getNewTextElem(changedElem: TextObj, newParam: string, paramToChange: 'text' | 'fontSize' | 'fontFamily'): TextObj {
+function getNewTextElem(changedElem: TextObj, newParam: string, paramToChange: 'text' | 'fontSize' | 'fontFamily' | 'textColor'): TextObj {
   let newElem = changedElem
   if (paramToChange === 'text') {
     newElem = {
@@ -267,8 +180,18 @@ function getNewTextElem(changedElem: TextObj, newParam: string, paramToChange: '
       fontSize: newParam
     }
   }
+  if (paramToChange === 'textColor') {
+    console.log(newParam)
+    newElem =
+    {
+      ...changedElem,
+      textColor: newParam
+    }
+  }
+  
   return newElem
 }
+
 
 function getElemsWithoutChangedElem(prog: MainProg, changedElemIndex: number, changedSlideIndex: number): Array<PictureObj | TextObj | ShapeObj> {
   return [...prog.currentPresentation.slides[changedSlideIndex].elements.filter((elem) => 
@@ -283,7 +206,7 @@ function getChangedElem(slides: Array<Slide>, changedSlideIndex: number, changed
   return slides[changedSlideIndex].elements[changedElemIndex]
 }
 
-function getNewShapeElem(changedElem: ShapeObj, newParam: string, paramToChange: 'borderColor' | 'fillColor'): ShapeObj {
+function getNewShapeElem(changedElem: ShapeObj, newParam: string, paramToChange: 'borderColor' | 'fillColor' | 'borderWidth'): ShapeObj {
   let newElem = changedElem
   if (paramToChange == 'borderColor') {
     newElem = {
@@ -295,6 +218,12 @@ function getNewShapeElem(changedElem: ShapeObj, newParam: string, paramToChange:
     newElem = {
       ...changedElem,
       fillColor: newParam
+    }
+  }
+  if (paramToChange == 'borderWidth') {
+    newElem = {
+      ...changedElem,
+      borderWidth: Number(newParam)
     }
   }
   return newElem
@@ -322,22 +251,6 @@ function getNewElemWithNewPosition(changedElem: PictureObj | TextObj | ShapeObj,
   }
 }
 
-function getSlideWithNewBackground(prog: MainProg, changedSlideIndex: number, newBackground: Picture | Color): Slide {
-  return {
-    ...prog.currentPresentation.slides[changedSlideIndex],
-    background: newBackground
-  }
-}
-
-function getSlidesWithChangedSlide(prog: MainProg, changedSlide: Slide, changedSlideIndex: number): Array<Slide> {
-  let slidesWithChangedSlide: Array<Slide> = [] 
-  for(let i = 0; i < prog.currentPresentation.slides.length; i++) {
-    i == changedSlideIndex
-      ? slidesWithChangedSlide[i] = changedSlide
-      : slidesWithChangedSlide[i] = prog.currentPresentation.slides[i]
-  }
-  return slidesWithChangedSlide
-}
 
 function getElemsWithChangedElem(prog: MainProg, changedSlideIndex: number, changedElemIndex: number, changedElem: PictureObj | TextObj | ShapeObj): Array<PictureObj | TextObj | ShapeObj> {
   let changedElemsArr: Array<PictureObj | TextObj | ShapeObj> = []
@@ -350,3 +263,10 @@ function getElemsWithChangedElem(prog: MainProg, changedSlideIndex: number, chan
 
   return changedElemsArr
 } 
+
+
+function getAllElemsIdArr(elems: Array<ShapeObj | TextObj | PictureObj>): Array<string> {
+  let allElems: Array<string> = [] 
+  elems.forEach(elem => allElems.push(elem.id))
+  return allElems
+}

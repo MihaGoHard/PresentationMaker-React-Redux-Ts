@@ -1,11 +1,13 @@
-import React from 'react'
-import BigSlideElement, { SmallSlideElement } from './Element/Element'
-import { isColor, isPictureObj, } from '../Models/CommonFunctions/supportFunctionsConst'
-import { Color, Picture, SlideElements, Slide, MainProg, Programm } from '../Models/CommonFunctions/types'
+import React, { useState } from 'react'
+import BigSlideElement from './Element/BigSlideElem'
+import { Color, Picture, SlideElements, Slide, borderLightType } from '../Models/types'
 import MainSlide from './Slide/Slide'
+import { isColor, isPictureObj } from '../Models/CommonFunctions/typesChecking'
+import SmallSlideElem from './Element/SmallSlideElem'
 
 
 export {
+  calcBlockedDivColor,
   getSlideSvgElems,
   getSlideBackground,
   getListSlides,
@@ -13,34 +15,38 @@ export {
 }
 
 
+function calcBlockedDivColor(playerIsOpen: boolean, isSmallSlide: boolean): string {
+  let blockedDivColor = 'none'
+  if(playerIsOpen || isSmallSlide) {
+    blockedDivColor = '#ffffff28'
+  }  
+  return blockedDivColor
+}
 
-function getDivSvgClassNames(isSmallSlide: boolean): {divClassName: string, svgClassName: string} {
+
+function getDivSvgClassNames(isSmallSlide: boolean, playerIsOpen: boolean): {divClassName: string, svgClassName: string} {
   let classNames = {
     divClassName: 'mainSlideDiv',
     svgClassName: 'mainSlideSvg'
   }
   if (isSmallSlide) {
-    classNames.divClassName = ''
+    classNames.divClassName = 'mainSlideDiv_small'
     classNames.svgClassName = 'smallMainSlideSvg'
   }
-
   return classNames
 }
 
 
 
-function getSlideBackground(modelSlideBackground: Picture | Color): string {
-  
-  let svgSlideBackground: string = ''
-  
-  if(isColor(modelSlideBackground)) {
-    svgSlideBackground = modelSlideBackground.hexColor
-  }
-  if (isPictureObj(modelSlideBackground)) {
-    svgSlideBackground = modelSlideBackground.imgB64
-  }
+function getSlideBackground(modelSlideBackground: Picture | Color): JSX.Element {
 
-  return svgSlideBackground
+  let svgBackground = <rect x={0} y={0} width={'0'} height={'0'} fill={'unset'}/>
+  if (modelSlideBackground.type == 'color')
+      svgBackground = <rect x={0} y={0} width={'100%'} height={'100%'} fill={String(modelSlideBackground.hexColor)}/>
+  if (modelSlideBackground.type == 'picture')
+      svgBackground = <image preserveAspectRatio="none" x={0} y={0} width={'100%'} height={'100%'} href={String(modelSlideBackground.imgB64)}/>    
+
+  return svgBackground
 }
 
 
@@ -60,7 +66,7 @@ function getSlideSvgElems(payload: getSlideElemsPayload): Array<JSX.Element> {
   for(let i = 0; i < modelSlideElemsLength; i++) {
     svgSlideElems.push(
       payload.isSmallSlideElem
-        ? <SmallSlideElement key={modelSlideElems[i].id} {...modelSlideElems[i]}/>
+        ? <SmallSlideElem key={modelSlideElems[i].id} shape={{...modelSlideElems[i]}} />
         : <BigSlideElement key={modelSlideElems[i].id} shape={{...modelSlideElems[i]}} svgProps={payload.svgRef}/> 
     )
   }
@@ -70,7 +76,7 @@ function getSlideSvgElems(payload: getSlideElemsPayload): Array<JSX.Element> {
 
 
 interface getListSlidesProps {
-  slideBorderLight: string,
+  slideBorderLight: borderLightType,
   slides: Array<Slide>,
   selectedSlides: Array<string>,
   canDeleteSlides: boolean,
@@ -78,6 +84,7 @@ interface getListSlidesProps {
 }
 
 function getListSlides(props: getListSlidesProps): Array<JSX.Element> {
+
 
   const selectedSlides = props.selectedSlides
   const slides = props.slides
@@ -88,11 +95,15 @@ function getListSlides(props: getListSlidesProps): Array<JSX.Element> {
   let slidesList: Array<JSX.Element> = []
   const slidesLength = Object.keys(slides).length
 
+
   function getDivClassname(i: number): string {
     
     let className = "slide-frame " + (selectedSlides.includes(slides[i].id) ? "slide-frame_selected" : "")
-    if (slideBorderLight == 'top') {
-      className =  "slide-frame, slide-frame_selected__top"
+    if (slideBorderLight.borderLightPlace == 'top' && slides[i].id == slideBorderLight.slideId) {
+      className = "slide-frame slide-frame_selected__top"
+    }
+    if (slideBorderLight.borderLightPlace == 'bottom' && slides[i].id == slideBorderLight.slideId) {
+      className = "slide-frame slide-frame_selected__bottom"
     }
     return className
   }
@@ -109,4 +120,3 @@ function getListSlides(props: getListSlidesProps): Array<JSX.Element> {
   }
   return slidesList
 }
-

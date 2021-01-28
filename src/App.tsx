@@ -1,18 +1,19 @@
 import React, { useEffect } from 'react';
-import {store} from './index'
 import './App.css';
 import  HeaderPanel  from './View/HeaderPanel/HeaderPanel';
 import  SlidesPanel  from './View/SlidesPanel/SlidesPanel';
 import  MainPanel from './View/MainPanel/MainPanel';
-import { Popup } from './View/Popup/Popup';
-import { PopupProvider } from './View/Popup/PopupContext';
+import { PopupLayer, Popup } from './View/Popup/Popup';
 import { useDeleteSelectedElems, useDeleteSelectedSlides, useMouseDownDocumentListner } from './CustomHooks/CommonMouseKeyboardEvents';
 import { connect } from 'react-redux';
-import { saveStateToArchive } from './Models/CommonFunctions/archive';
-import { Dispatch } from 'redux';
-import { Programm } from './Models/CommonFunctions/types';
-import { setSelectedElement, deleteSelectedElements, setCanDeleteSlide, deleteSlide, setSelectedSlides   } from './Models/ActionCreators/actionCreators';
-import  Archive  from './View/ArchiveElem';
+import { Programm } from './Models/types';
+import { setCanDeleteSlide } from './Models/ActionCreators/commonActionCreators';
+import { ColorPickerLayer, ColorPicker } from './View/ColorPicker/ColorPicker'; 
+import { PaletteLayer } from './View/Palette/Palette'; 
+import { useCopyPasteListners } from './CustomHooks/CommonDifferentHooks';
+import Modal, { ModalLayer } from './View/Modal/Modal'
+import { deleteSlides, setSelectedSlides } from './Models/ActionCreators/slideActionCreators';
+import { setSelectedElement, deleteSelectedElements } from './Models/ActionCreators/elemActionCreators';
 
 
 interface AppProps {
@@ -38,28 +39,32 @@ function App(props: AppProps) {
     setSelectedSlides: props.setSelectedSlides,
     setSelectedElement: props.setSelectedElement
   })
-  
-  // popup layer
-
 
   return (
-    <PopupProvider>
-    <Archive />
-    <div className="App">
-      <div className="App-header">      
-        <HeaderPanel />
-      </div>
-      <div className="App-body">
-        <SlidesPanel />
-        <MainPanel />
-      </div>
-      <div className="additional">
-        <Popup />
-      </div>
-      <div className="App-footer">
-      </div>
-    </div>
-    </PopupProvider>
+    <ModalLayer>
+      <PaletteLayer>
+        <ColorPickerLayer>
+          <PopupLayer>
+            <div className="App">
+              <div className="App-header">      
+                <HeaderPanel />
+              </div>
+              <div className="App-body">
+                <SlidesPanel />
+                <MainPanel />
+              </div>
+              <div className="additional">
+                <Popup />
+                <ColorPicker />
+              </div>
+              <div className="App-footer">
+              </div>
+              <Modal />
+            </div>
+          </PopupLayer>
+        </ColorPickerLayer>
+      </PaletteLayer>
+    </ModalLayer>
   )
 }
 
@@ -69,7 +74,7 @@ const mapDispatchToProps = {
     setCanDeleteSlide,
     setSelectedElement,
     deleteSelectedElements,
-    deleteSlide
+    deleteSlide: deleteSlides
 }
 
 

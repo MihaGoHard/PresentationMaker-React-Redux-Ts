@@ -1,6 +1,10 @@
+import { createNewId, deepFreeze } from '../CommonFunctions/supportFunctions/commonOperations'
+import { createPictureObj, createEmtyTextObj, createShapeObj, getChangedElem, getElemsWithChangedElem, getElemsWithNewElem, getNewElemWithNewPosition, getNewResizedElem, getNewShapeElem, getNewTextElem, searchChangedElemIndexById } from '../CommonFunctions/supportFunctions/supportElemOperations'
+import { searchChangedSlideIndex, getSlidesWithChangedSlide, getSlideWithNewBackground, getSlideWithChangedElems } from '../CommonFunctions/supportFunctions/supportSlideOperations'
+import { isColor, isPictureObj, isShapeObj, isTextObj } from '../CommonFunctions/typesChecking'
 import {
+  Programm,
   MainProg,
-  StateTypes,
   Slide,
   Picture,
   PictureObj,
@@ -9,64 +13,53 @@ import {
   ShapeObj,
   borderLightType,
   ActionType,
-  CommonDeps,
-} from '../CommonFunctions/types'
-
-import {
-  defaultPoint,
-  createNewId,
-  searchChangedSlideIndex,
-  searchChangedElemIndex,
-  searchChangedElemIndexById,
-  deepFreeze,
-  isTextObj,
-  isShapeObj,
-  getNewTextElem,
-  getElemsWithNewElem,
-  getChangedElem,
-  getNewShapeElem,
-  getNewResizedElem,
-  getNewElemWithNewPosition,
-  getSlideWithNewBackground,
-  getSlidesWithChangedSlide,
-  getElemsWithChangedElem,
-} from '../CommonFunctions/supportFunctionsConst'
-import { textChangeRangeIsUnchanged } from 'typescript'
-
+} from '../types'
 
 
 export {
-  re_setCanDeleteSlide,
   re_setSlideBackground,
-  createPictureObj,
   re_addPictureObj,
-  createEmtyTextObj,
   re_addTextObj,
   re_changeTextObj,
-  createShapeObj,
   re_addShapeObj,
-  changeShapeObj,
+  re_changeShapeObj,
   re_resizeElement,
   re_changeElemPosition,
   re_setSelectedElement,
   re_removeOneElemFromSelectedElems,
-  re_deleteSelectedElements
+  re_deleteSelectedElements,
+  re_copyElems,
+  re_pasteElems
 }
 
-function re_setCanDeleteSlide(state: CommonDeps, action: ActionType) {
-  return {
-    ...state,
-    canDeleteSlides: action.payload
-  }
-}
 
 function re_setSlideBackground(state: MainProg, action: ActionType) {
+
+  let backgroundObj: Picture | Color = {
+    hexColor: '', 
+    type: 'color',
+  }
 
   deepFreeze(state)
   
   const changedSlideIndex: number = searchChangedSlideIndex(state.currentPresentation.slides, state.selectedSlides)
 
-  const changedSlide =  getSlideWithNewBackground(state, changedSlideIndex, action.payload.newBackground)
+  if (isPictureObj(action.payload)) {
+    backgroundObj = {
+      imgB64: action.payload.imgB64,
+      type: 'picture',
+      fillColor: 'unset',
+      borderColor: 'unset',
+      borderWidth: 1
+    }
+  }
+  if (isColor(action.payload)) {
+    backgroundObj = {
+      hexColor: action.payload.hexColor, 
+      type: 'color',
+    }
+  }
+  const changedSlide = getSlideWithNewBackground(state, changedSlideIndex, backgroundObj)
 
   const slidesWithChangedSlide = getSlidesWithChangedSlide(state, changedSlide, changedSlideIndex)
 
@@ -79,35 +72,11 @@ function re_setSlideBackground(state: MainProg, action: ActionType) {
   }
 }
 
-function createPictureObj(width: number, height: number, imgB64: string): PictureObj {
-  return {
-    id: createNewId(),
-    position: defaultPoint,
-    height: height,
-    wigth: width,
-    type: 'picture',
-    imgB64
-  }
-}
 
 
-function getSlideWithChangedElems(prevProgState: MainProg, changedElems: Array<PictureObj | TextObj | ShapeObj>, changedSlideIndex: number): Slide {
-  return {
-    ...prevProgState.currentPresentation.slides[changedSlideIndex],
-    elements: changedElems
-  }
-}
-
-export function getSlideWithChangedBorderLight(prevProgState: MainProg, borderLight: borderLightType, changedSlideIndex: number): Slide {
-  return {
-    ...prevProgState.currentPresentation.slides[changedSlideIndex],
-    //slideBorderLight: borderLight
-  }
-}
 
 function re_addPictureObj(state: MainProg, action: ActionType) {
   
-  console.log(action)
 
   const width = action.payload.width
   const height = action.payload.height
@@ -134,22 +103,7 @@ function re_addPictureObj(state: MainProg, action: ActionType) {
   }           
 }
 
-function createEmtyTextObj(): TextObj {
-  return {
-    id: createNewId(),
-    position: {
-      x: 10,
-      y: 10
-    },
-    height: 100,
-    wigth: 300,
-    text: "",
-    fillColor: '#e6e6e6',
-    fontFamily: 'oblique',
-    fontSize: '50',
-    type: 'text'
-  }
-}
+
 
 function re_addTextObj(state: MainProg, action: ActionType) {
 
@@ -174,9 +128,9 @@ function re_addTextObj(state: MainProg, action: ActionType) {
   }
 }
 
+
 function re_changeTextObj(state: MainProg, action: ActionType) { 
   
-
   const paramToChange = action.payload.paramToChange
   const newParam = action.payload.newParam
   const id = action.payload.id
@@ -184,46 +138,43 @@ function re_changeTextObj(state: MainProg, action: ActionType) {
   deepFreeze(state)
 
   const changedSlideIndex = searchChangedSlideIndex(state.currentPresentation.slides, state.selectedSlides)
-  const changedElemIndex = searchChangedElemIndexById(state.currentPresentation.slides, changedSlideIndex, id)
-  
-  let changedElem = getChangedElem(state.currentPresentation.slides, changedSlideIndex, changedElemIndex)
-  
-  if (isTextObj(changedElem)) {
-    changedElem = getNewTextElem(changedElem, newParam, paramToChange)
+  const elemsLength = state.currentPresentation.slides[changedSlideIndex].elements.length
+
+  let changedElemsArr = []
+
+  if (action.payload.paramToChange !== 'text') {
+    for (let i = 0; i < elemsLength; i++) {
+      let changedElem = getChangedElem(state.currentPresentation.slides, changedSlideIndex, i)    
+      if(isTextObj(changedElem) && state.selectedElements.includes(changedElem.id)) {
+        changedElem = getNewTextElem(changedElem, newParam, paramToChange)
+      }
+      changedElemsArr.push(changedElem)
+    }
+  } else { 
+
+    const changedElemIndex = searchChangedElemIndexById(state.currentPresentation.slides, changedSlideIndex, id)
+    
+    let changedElem = getChangedElem(state.currentPresentation.slides, changedSlideIndex, changedElemIndex)
+    
+    if (isTextObj(changedElem)) {
+      changedElem = getNewTextElem(changedElem, newParam, paramToChange)
+    }
+
+    changedElemsArr = getElemsWithChangedElem(state, changedSlideIndex, changedElemIndex, changedElem)
   }
-
-
-  const changedElemsArr = getElemsWithChangedElem(state, changedSlideIndex, changedElemIndex, changedElem)
   const slideWithChangedElems = getSlideWithChangedElems(state, changedElemsArr, changedSlideIndex)
   
   const slidesWithChangedSlide = getSlidesWithChangedSlide(state, slideWithChangedElems, changedSlideIndex)
-  
   
   return {
       ...state,
       currentPresentation: {
           ...state.currentPresentation,
           slides: slidesWithChangedSlide
-    }  
+      }
   }  
 }
 
-
-function createShapeObj(type: 'rect' | 'triangle' | 'circle'): ShapeObj {
-  let fillColor = '#ccccd9'
-  return {
-    id: createNewId(),
-    position: {
-      x: 10,
-      y: 10
-    },
-    wigth: 200,
-    height: 200,
-    borderColor: '#cccccc',
-    fillColor: fillColor,
-    type
-  }
-} 
 
 function re_addShapeObj(state: MainProg, action: ActionType) {
 
@@ -248,32 +199,40 @@ function re_addShapeObj(state: MainProg, action: ActionType) {
   }       
 }
 
-function changeShapeObj(state: MainProg, newParam: string, paramToChange: 'borderColor' | 'fillColor') {
+
+function re_changeShapeObj(state: MainProg, action: ActionType) {
   deepFreeze(state)
   
   const changedSlideIndex = searchChangedSlideIndex(state.currentPresentation.slides, state.selectedSlides)
-  const changedElemIndex = searchChangedElemIndex(state, changedSlideIndex)
+  const elemsLength = state.currentPresentation.slides[changedSlideIndex].elements.length
+  let changedElemsArr = []
+
+  for (let i = 0; i < elemsLength; i++) {
+    let changedElem = getChangedElem(state.currentPresentation.slides, changedSlideIndex, i)    
+    if(state.selectedElements.includes(changedElem.id)) {
+      if (isShapeObj(changedElem)) {
+        changedElem = getNewShapeElem(changedElem, action.payload.newParam, action.payload.paramToChange)
+      }
   
-  let changedElem = getChangedElem(state.currentPresentation.slides, changedSlideIndex, changedElemIndex)
-  if (isShapeObj(changedElem)) {
-    changedElem = getNewShapeElem(changedElem, newParam, paramToChange)
+      if (isTextObj(changedElem)) {
+        changedElem = getNewTextElem(changedElem, action.payload.newParam, action.payload.paramToChange)
+      }      
+    }
+    changedElemsArr.push(changedElem)
   }
 
-  const changedElemsArr = getElemsWithChangedElem(state, changedSlideIndex, changedElemIndex, changedElem)
   const slideWithChangedElems = getSlideWithChangedElems(state, changedElemsArr, changedSlideIndex)
   const slidesWithChangedSlide = getSlidesWithChangedSlide(state, slideWithChangedElems, changedSlideIndex) 
 
   return {
-    type: StateTypes.CHANGE_SHAPE_OBJ,
-    payload: {
       ...state,
       currentPresentation: {
           ...state.currentPresentation,
           slides: slidesWithChangedSlide
-      }
     }  
   }  
 }
+
 
 function re_resizeElement(state: MainProg, action: ActionType): MainProg { 
   
@@ -290,7 +249,6 @@ function re_resizeElement(state: MainProg, action: ActionType): MainProg {
   const slideWithChangedElems = getSlideWithChangedElems(state, changedElemsArr, changedSlideIndex)
   const slidesWithChangedSlide = getSlidesWithChangedSlide(state, slideWithChangedElems, changedSlideIndex)
 
-  //console.log(slidesWithChangedSlide[0].elements[0].position)
 
   return {
     ...state,
@@ -300,6 +258,7 @@ function re_resizeElement(state: MainProg, action: ActionType): MainProg {
     }  
   }
 }
+
 
 function re_changeElemPosition(state: MainProg, action: ActionType) {
   
@@ -326,6 +285,83 @@ function re_changeElemPosition(state: MainProg, action: ActionType) {
 }
 
 
+function re_copyElems(state: Programm): Programm {
+  
+  const selectedElems: Array<string> = state.mainProg.selectedElements
+
+  return {
+    ...state,
+    commonDeps: {
+      ...state.commonDeps,
+      copyElemsArr: [...selectedElems],
+      copySlidesArr: []
+    }
+  }
+}
+
+
+function re_pasteElems(state: Programm): Programm {
+
+  deepFreeze(state)
+
+  const slides = state.mainProg.currentPresentation.slides
+
+  let newElemsToPaste: Array<ShapeObj | PictureObj | TextObj> = []
+  let newCopyElemsArr: Array<string> = []
+  let newSelectedElems: Array<string> = []
+
+  const copyElemsArr = state.commonDeps.copyElemsArr
+  
+  slides.forEach((slide: Slide, i = 0) => {
+    const elems = [...state.mainProg.currentPresentation.slides[i].elements]
+    elems.forEach(elem => {
+
+      if (copyElemsArr.includes(elem.id)) {
+        const newElem = {
+          ...elem,
+          id: createNewId(),
+          position: {
+            x: elem.position.x + 10,
+            y: elem.position.y + 10,
+          }
+        }
+        if (copyElemsArr.includes(newElem.id)) {
+          newElem.id = createNewId()
+        }
+        //console.log(newElem.id, elem.id)
+        newElemsToPaste.push(newElem)
+        newCopyElemsArr.push(newElem.id)
+        newSelectedElems.push(newElem.id)
+      }
+    })
+  })
+
+  const slideIndex = searchChangedSlideIndex(state.mainProg.currentPresentation.slides, state.mainProg.selectedSlides)
+
+  const currSlideElems = state.mainProg.currentPresentation.slides[slideIndex].elements
+
+  let newElems: Array<TextObj | ShapeObj | PictureObj> = [...currSlideElems, ...newElemsToPaste]
+  
+  const slideWithChangedElems = getSlideWithChangedElems(state.mainProg, newElems, slideIndex)
+  const slidesWithChangedSlide = getSlidesWithChangedSlide(state.mainProg, slideWithChangedElems, slideIndex)
+
+  return {
+    mainProg: {
+      ...state.mainProg,
+      currentPresentation: {
+        ...state.mainProg.currentPresentation,
+        slides: slidesWithChangedSlide
+      },
+      selectedElements: newSelectedElems
+    },
+    commonDeps: {
+      ...state.commonDeps,
+      copyElemsArr: newCopyElemsArr
+    }
+  }
+}
+
+
 function re_removeOneElemFromSelectedElems(state: MainProg, action: ActionType) {
   const selectedElems: Array<string> = [...state.selectedElements]
   let newElems: Array<string> = []
@@ -343,12 +379,13 @@ function re_removeOneElemFromSelectedElems(state: MainProg, action: ActionType) 
 
 
 function re_setSelectedElement(state: MainProg, action: ActionType) {
-  const prevProgState = state
+  
   return {
-      ...prevProgState,
+      ...state,
       selectedElements: action.payload
   }
 }
+
 
 function re_deleteSelectedElements(state: MainProg, action: ActionType) { 
 

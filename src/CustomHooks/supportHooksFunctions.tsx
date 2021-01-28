@@ -1,12 +1,15 @@
-import React  from 'react'
-import { checkSecondSlideIsBeyond, checkSelectedElem } from '../Models/CommonFunctions/supportFunctionsConst'
-import { MainProg, Programm, Slide } from '../Models/CommonFunctions/types'
+import React, { useContext, useEffect }  from 'react'
+import { checkSelectedElem, getElemByIdToPalette } from '../Models/CommonFunctions/supportFunctions/supportElemOperations'
+import { checkSecondSlideIsBeyond } from '../Models/CommonFunctions/supportFunctions/supportSlideOperations'
+import { Slide } from '../Models/types'
+import { PaletteContext } from '../View/Palette/Palette'
 
 
 export {
   setSelectedElemsInHook,
   setSelectedSlidesInHook,
-  checkSlideForReplace
+  checkSlideForReplace,
+  useSetGlobalActiveTool
 }
 
 
@@ -18,7 +21,6 @@ interface setSelectedElemsProps {
   elemId: string
 }
 
-
 function setSelectedElemsInHook(props: setSelectedElemsProps) {
   if (!checkSelectedElem(props.selectedElements, props.elemId)) {
     if (props.event.ctrlKey) { 
@@ -27,9 +29,10 @@ function setSelectedElemsInHook(props: setSelectedElemsProps) {
       props.setSelectedElement([props.elemId])
     } 
   } else if (props.event.ctrlKey) {
-    //props.removeOneElemFromSelectedElems(props.elemId)
+    props.removeOneElemFromSelectedElems(props.elemId)
   }
 }
+
 
 interface setSelectedSlidesProps {
   slides: Array<Slide>,
@@ -42,18 +45,40 @@ interface setSelectedSlidesProps {
   setSelectedElement: (elemsArr: Array<string>) => void,
   
   event: React.MouseEvent | MouseEvent, 
-  slideId: string
+  slideId: string,
+  canMoveSlides: React.MutableRefObject<boolean>,
+
+  svgRef: React.MutableRefObject<SVGSVGElement | null>
 }
 
 function setSelectedSlidesInHook(props: setSelectedSlidesProps) {
   const canDeleteSlides = props.canDeleteSlides
   const selectedSlides = props.selectedSlides
   const selectedElements = props.selectedElements
-  if (!canDeleteSlides) {   
+  let reselectSlide = false
+  if (!canDeleteSlides) { 
+    props.setSelectedSlides([props.slideId])  
     props.setCanDeleteSlide(true)
   }
 
-  if (!selectedSlides.includes(props.slideId)) {  
+  const mouseLeaveListner = (e: MouseEvent) => {
+    reselectSlide = true
+  }
+
+  const mouseEnterListner = (e: MouseEvent) => {
+    reselectSlide = false
+  }
+
+  const mouseUpListner = () => {
+    if (!reselectSlide) {
+      props.setSelectedSlides([props.slideId])
+    }
+    props.svgRef.current?.removeEventListener('mouseover', mouseLeaveListner)
+    props.svgRef.current?.addEventListener('mouseenter', mouseEnterListner)
+    document.removeEventListener('mouseup', mouseUpListner)
+  }
+
+  if (!selectedSlides.includes(props.slideId)) { 
     if (props.event.ctrlKey) { 
       props.setSelectedSlides([...selectedSlides, props.slideId])
     } else {
@@ -61,10 +86,13 @@ function setSelectedSlidesInHook(props: setSelectedSlidesProps) {
     }
   } else if (selectedSlides.length > 1) {
     if (props.event.ctrlKey) {
-      props.removeOneElemFromSelectedSlides(props.slideId)  
+      props.removeOneElemFromSelectedSlides(props.slideId)
+      props.canMoveSlides.current = false
     } else {
-      props.setSelectedSlides([props.slideId])
-    }
+      props.svgRef.current?.addEventListener('mouseleave', mouseLeaveListner)
+      props.svgRef.current?.addEventListener('mouseenter', mouseEnterListner)
+      document.addEventListener('mouseup', mouseUpListner)
+    }  
   }   
   
   if (selectedElements.length !== 0) {
@@ -82,7 +110,6 @@ interface chekSlideReplaceProps {
   svgRef: React.MutableRefObject<SVGSVGElement | null>, 
   slideId: string
 }
-
 
 function checkSlideForReplace(props: chekSlideReplaceProps): boolean {
   let canMoveSlide = false;
@@ -108,4 +135,29 @@ function checkSlideForReplace(props: chekSlideReplaceProps): boolean {
   } 
   
   return canMoveSlide
+}
+
+
+interface setActiveToolProps {
+  selectedElements: Array<string>,
+  slides: Array<Slide>,
+}
+
+function useSetGlobalActiveTool(props: setActiveToolProps) {
+  const {setActiveTool, setValue} = useContext(PaletteContext)
+  useEffect(() => {
+    if (props.selectedElements.length == 0) {
+      setActiveTool(0)
+    } else if (props.selectedElements.length > 1) {
+      setActiveTool(2)
+    } else {
+      let activeElem = getElemByIdToPalette(props.slides, props.selectedElements[0])
+      if (activeElem == null) 
+        setActiveTool(0)
+      else if (activeElem.type == 'text') {
+        setActiveTool(1);
+      } else 
+        setActiveTool(2)
+    } 
+  }, [props.selectedElements])
 }

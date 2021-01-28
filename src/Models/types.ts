@@ -1,6 +1,7 @@
-export type ActionType = any 
+export type ActionType = any
 
 export enum StateTypes {
+    CREATE_DEFAULT_PROGRAMM,
     LOAD_PROJECT,
     GO_FORWARD_ARCHIVE,
     GO_BACK_ARCHIVE,
@@ -25,9 +26,15 @@ export enum StateTypes {
     SET_CAN_DELETE_SLIDE,
     INC_ELEMS_MOVE_COUNT,
     RESET_ELEMS_MOVE_COUNT,
-    TOP_SLIDE_BORDER_LIGHT,
-    BOTTOM_SLIDE_BORDER_LIGHT,
-    RESET_SLIDE_BORDER_LIGHT
+    LIGHT_SLIDE,
+    SET_SAVE_TO_ARCH,
+    COPY_ELEMS,
+    PASTE_ELEMS,
+    COPY_SLIDES,
+    PASTE_SLIDES,
+    OPEN_PLAYER,
+    CLOSE_PLAYER,
+    SWITCH_SLIDE,
 }
 
 
@@ -43,10 +50,12 @@ export type Programm = {
         elemsMoveCount: number,
         saveToArch: boolean,
         slideBorderLight: borderLightType,
+        copyElemsArr: Array<string>,
+        copySlidesArr: Array<string>,
+        playerIsOpen: boolean
     }
 }
-
-export type borderLightType = 'top' | 'bottom' | 'unset'
+   
 
 export type MainProg = {
     currentPresentation: Presentation,
@@ -58,7 +67,14 @@ export type CommonDeps = {
     canDeleteSlides: boolean,
     elemsMoveCount: number,
     saveToArch: boolean,
+    slideBorderLight: {
+        borderLightPlace: string,
+        slideId: string
+    },    
+    copyElemsArr: Array<string>,
+    copySlidesArr: Array<string>    
 }
+
 
 
 export type Presentation = {
@@ -94,6 +110,9 @@ export type ElementObj = {
 export type Picture = {
     imgB64: string,
     type: 'picture',
+    fillColor: string,
+    borderColor: string,
+    borderWidth: number
 }
 
 export type PictureObj = ElementObj & Picture;
@@ -101,6 +120,9 @@ export type PictureObj = ElementObj & Picture;
 export type TextObj = ElementObj & {
     text: string,
     fillColor: string,
+    borderColor: string,
+    borderWidth: number,
+    textColor: string,
 	fontFamily: string,
 	fontSize: string,
 	type: 'text',
@@ -113,8 +135,9 @@ export type Color = {
 
 export type ShapeObj = ElementObj & {
     type: 'triangle' | 'rect' | 'circle' | 'outlineRect',
-    borderColor: string, //borderColor  string
-    fillColor: string
+    borderColor: string,
+    borderWidth: number,
+    fillColor: string,
 }
 
 export type ChangedObjPosType = {
@@ -122,6 +145,11 @@ export type ChangedObjPosType = {
     newY: number,
     saveToArh: boolean
 }
+
+export type borderLightType = {
+    borderLightPlace: 'top' | 'bottom' | 'unset',
+    slideId: string
+} 
 
 export type SlideId = string
 

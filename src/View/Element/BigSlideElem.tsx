@@ -1,62 +1,16 @@
-import React, { useState, useRef, useEffect} from 'react'
-import { checkSelectedElem, getCurrElemPosition } from '../../Models/CommonFunctions/supportFunctionsConst'
-
-import { PictureObj, TextObj, ShapeObj, Programm, Slide} from '../../Models/CommonFunctions/types'
+import React, { useState, useRef} from 'react'
+import { PictureObj, TextObj, ShapeObj, Programm, Slide} from '../../Models/types'
 import './Element.css'
 import { useDragAndDropElement, useReSizeElement} from '../../CustomHooks/ElemMouseEvents'
-import { OutlineRect,  ImgTextObject, ShapeObject } from './SvgElems'
-import { useNormalizeElemSize } from '../../CustomHooks/CommonDifferentHooks'
-import { Dispatch } from 'redux'
+import { useNormalizeElemSize, useSetElemPropsAfterSlideChanged } from '../../CustomHooks/CommonDifferentHooks'
 import { connect } from 'react-redux'
-import { changeElemPosition, resizeElement, changeTextObj, setSelectedElement, setCanDeleteSlide, removeOneElemFromSelectedElems } from '../../Models/ActionCreators/actionCreators'
-import { store } from '../..'
-import { Program } from 'typescript'
-
-export {
-  SmallSlideElement
-}
-
-
-function SmallSlideElement(shape: PictureObj | TextObj | ShapeObj) {
-  let width = shape.wigth / 10
-  let height = shape.height / 10
-  let posX = shape.position.x  / 10
-  let posY = shape.position.y  / 10
-
-  const elemRef = useRef<(SVGPolygonElement & SVGRectElement & SVGImageElement & SVGEllipseElement) | null>(null)
-
-  let svgElem: JSX.Element = <rect/>
-  let outLineRect: JSX.Element = <rect />
-
-  if (shape.type === 'rect' || shape.type === 'triangle' || shape.type === 'circle') {
-    svgElem = <ShapeObject 
-      shape={shape}
-      elemRef={elemRef}
-      posX={posX}
-      posY={posY}
-      width={width}
-      height={height}
-      outlineRect={outLineRect}
-    />
-  }
-
-  if (shape.type === 'picture' || shape.type === 'text' ){
-    svgElem = <ImgTextObject
-      shape={shape}
-      elemRef={elemRef}
-      posX={posX}
-      posY={posY}
-      width={width}
-      height={height}
-      outlineRect={outLineRect}
-      isSmallElem={true}
-      changeTextObj={null}
-    />
-  }
-
-  return (svgElem)
-}
-
+import { setCanDeleteSlide, setSaveToArch } from '../../Models/ActionCreators/commonActionCreators'
+import { changeElemPosition, changeTextObj, removeOneElemFromSelectedElems, resizeElement, setSelectedElement } from '../../Models/ActionCreators/elemActionCreators'
+import { checkSelectedElem } from '../../Models/CommonFunctions/supportFunctions/supportElemOperations'
+import { ShapeObject } from './ShapesSvg'
+import { ImgTextObject } from './TextPictureSvg'
+import { OutlineRect } from './OutlineSvg'
+ 
 
 interface BigSlideElementProps {
   slides: Array<Slide>,
@@ -69,8 +23,10 @@ interface BigSlideElementProps {
   resizeElement: (newWidth: number, newHeigth: number, newPosX: number, newPosY: number, id: string) => void,
   changeTextObj: (newParams: {newParam: string, paramToChange: 'text' | 'fontSize' | 'fontFamily', id: string}) => void,
   removeOneElemFromSelectedElems: (elemId: string) => void,
+  setSaveToArch: (saveToArch: boolean) => void,
   shape: PictureObj | TextObj | ShapeObj,
-  svgProps: React.MutableRefObject<SVGSVGElement | null>
+  svgProps: React.MutableRefObject<SVGSVGElement | null>,
+  playerIsOpen: boolean
 }
 
 function BigSlideElement(props: BigSlideElementProps) {
@@ -97,10 +53,8 @@ function BigSlideElement(props: BigSlideElementProps) {
   const[elemSize, setSize] = useState({width: elemWidth, height: elemHeight})
 
 
-  //useNormalizeElemSize({id, resizeElement: props.resizeElement, setSize, elemWidth, elemHeight, svgWidth, svgHeight})
+  useNormalizeElemSize({id, resizeElement: props.resizeElement, setSize, elemWidth, elemHeight, svgWidth, svgHeight})
 
-  //console.log(props.slides[0]?.elements[0].position)
-  //console.log(store.getState().mainProg.currentPresentation.slides[0]?.elements[0].position)
 
   useDragAndDropElement({
     id: props.shape.id,
@@ -120,7 +74,9 @@ function BigSlideElement(props: BigSlideElementProps) {
 
 
   useReSizeElement ({
-    id: props.shape.id, 
+    id: props.shape.id,
+    shapeType: props.shape.type,
+    borderWidth: props.shape.borderWidth, 
     firstPointRef, secondPointRef, thirdPointRef, fourthPointRef,
     mainSvgProps,
     slides: props.slides,
@@ -132,16 +88,23 @@ function BigSlideElement(props: BigSlideElementProps) {
     setSize
   })  
 
-  useEffect(() => {
-      setPos({x: elemPosX, y: elemPosY})
-      setSize({width: elemWidth, height: elemHeight})
-  }, [props.slides])
+  useSetElemPropsAfterSlideChanged({
+    slides: props.slides,
+    x: elemPosX,
+    y: elemPosY,
+    width: elemWidth,
+    height: elemHeight,
+    setPos,
+    setSize
+  })
+
   
   let svgElem: JSX.Element = <rect/>
   let outLineRect: JSX.Element = <rect/>
 
   if (checkSelectedElem(props.selectedElements, id)) {
-    outLineRect = <OutlineRect 
+    outLineRect = <OutlineRect
+      shapeType={props.shape.type}
       firstPointRef={firstPointRef}
       secondPointRef={secondPointRef}
       thirdPointRef={thirdPointRef}
@@ -151,6 +114,7 @@ function BigSlideElement(props: BigSlideElementProps) {
       posY={pos.y}
       width={elemSize.width}
       height={elemSize.height}
+      borderWidth={props.shape.borderWidth}
     />
   }
 
@@ -162,6 +126,7 @@ function BigSlideElement(props: BigSlideElementProps) {
       posY={pos.y}
       width={elemSize.width}
       height={elemSize.height}
+      borderWidth={props.shape.borderWidth}
       outlineRect={outLineRect}
     />
   }
@@ -177,9 +142,13 @@ function BigSlideElement(props: BigSlideElementProps) {
       outlineRect={outLineRect}
       isSmallElem={false}
       changeTextObj={props.changeTextObj}
+      setSaveToArch={props.setSaveToArch}
+      setSelectedElement={props.setSelectedElement}
+      selectedElemets={props.selectedElements}
+      canDeleteSlides={props.canDeleteSlides}
+      playerIsOpen={props.playerIsOpen}
     />
   }
-  
   return (svgElem)
 }
 
@@ -191,7 +160,8 @@ const mapDispatchToProps = {
     changeElemPosition,
     resizeElement,
     removeOneElemFromSelectedElems,
-    changeTextObj
+    changeTextObj,
+    setSaveToArch 
 }
 
 const mapStateToProps = (state: Programm) => {
@@ -199,7 +169,8 @@ const mapStateToProps = (state: Programm) => {
     slides: state.mainProg.currentPresentation.slides,
     selectedElements: state.mainProg.selectedElements,
     selectedSlides: state.mainProg.selectedSlides,
-    canDeleteSlides: state.commonDeps.canDeleteSlides
+    canDeleteSlides: state.commonDeps.canDeleteSlides,
+    playerIsOpen: state.commonDeps.playerIsOpen
 }}
 
 export default connect(mapStateToProps, mapDispatchToProps)(BigSlideElement)

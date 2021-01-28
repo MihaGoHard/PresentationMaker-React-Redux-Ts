@@ -1,7 +1,4 @@
 import React, {useEffect} from 'react'
-//import { dispatch, getState } from '..'
-
-import { CommonDeps, MainProg, Programm } from '../Models/CommonFunctions/types'
 
 
 export {

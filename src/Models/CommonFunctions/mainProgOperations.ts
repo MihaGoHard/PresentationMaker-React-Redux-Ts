@@ -1,47 +1,60 @@
 import {
-    StateTypes,
-    Programm,
-    Slide,
-    MainProg
-} from '../CommonFunctions/types';
-
-import {createDefaultSlide,} from '../Reducers/slidesReducers'
+  Programm,
+  Slide,
+  MainProg,
+  ActionType
+} from '../types';
+import { createDefaultSlide } from './supportFunctions/supportSlideOperations';
 
 export {
-    createProgram,
-    changePresentationTitle,
+  re_checkProgrammExists,
+  re_createProgram,
+  re_changePresentationTitle
 }
 
-function createProgram(): Programm {
-    const currSlide: Slide = createDefaultSlide();
-    return {
-        mainProg: {
-            currentPresentation: {
-                title: 'Презентация без названия',
-                slides: [currSlide]
-            },
-            selectedSlides: [currSlide.id],
-            selectedElements: []
+
+function re_checkProgrammExists() {
+  const serializedState = localStorage.getItem("stateProgram");
+  if (serializedState === null)
+    return re_createProgram()
+  else
+    return JSON.parse(serializedState) as Programm; 
+}
+
+
+function re_createProgram(): Programm {
+  const currSlide: Slide = createDefaultSlide();
+  return {
+    mainProg: {
+      currentPresentation: {
+          title: 'Презентация без названия',
+          slides: [currSlide]
         },
-        commonDeps: {    
-            canDeleteSlides: false,
-            elemsMoveCount: 0,
-            saveToArch: true,
-            slideBorderLight: 'unset',
-        }    
-    }
+          selectedSlides: [currSlide.id],
+          selectedElements: []
+      },
+    commonDeps: {    
+      canDeleteSlides: true,
+      elemsMoveCount: 0,
+      saveToArch: true,
+      slideBorderLight: {
+        borderLightPlace: 'unset',
+        slideId: ''
+      },
+      copyElemsArr: [],
+      copySlidesArr: [],
+      playerIsOpen: false    
+    }    
+  }
 }
 
-function changePresentationTitle(prevProgState: MainProg, newTitle: string) {
-    
-    return {
-        type: StateTypes.CHANGE_PRESENTATION_TITLE,
-        payload: {
-            ...prevProgState,
-            currentPresentation: {
-                ...prevProgState.currentPresentation,
-                title: newTitle
-            }
-        }    
+
+function re_changePresentationTitle(prevProgState: MainProg, action: ActionType): MainProg {   
+  return {
+    ...prevProgState,
+    currentPresentation: {
+        ...prevProgState.currentPresentation,
+        title: action.payload
     }
+  }
 }

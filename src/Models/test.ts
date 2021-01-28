@@ -10,35 +10,7 @@ import {
   TextObj,
   Color,
   ShapeObj,
-} from './CommonFunctions/types'
-
-
-
-import {
-  setSlideBackground,
-  createPictureObj,
-  createEmtyTextObj,
-  changeTextObj,
-  createShapeObj,
-  changeShapeObj,
-} from './Reducers/slideElemReducers'
-
-import {
-  createDefaultSlide,
-  supportSlidesWithoutSelectedSlides,
-  supportSortingSelectedSlides,
-
-} from './Reducers/slidesReducers'
-
-import {
-  defaultPoint,
-  createNewId,
-  searchChangedSlideIndex,
-  searchChangedElemIndex,
-  isTextObj,
-  isShapeObj,
-  isPictureObj
-} from './CommonFunctions/supportFunctionsConst'
+} from './types'
 
 
 /*test('createProgramm', () => {     

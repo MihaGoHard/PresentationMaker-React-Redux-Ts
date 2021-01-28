@@ -1,52 +1,82 @@
-import React, { useState } from 'react';
-import { connect } from 'react-redux';
-import './Popup.css';
-import { usePopup, useSetPopup, IsVisiblePopup, useSetIsVisiblePopup } from './PopupContext'
+import React, {useState, useContext} from 'react'
+import './Popup.css'
 
-export type PopupItem  = {
-    caption: string,
-    action: () => void,
+export {
+  PopupLayer,
+  Popup,
+  PopupContext,
 }
 
-export type Pos = {
-    x: number,
-    y: number,
+
+type PopupItem  = {
+  caption: string,
+  action: () => void,
+}
+
+type Pos = {
+  x: number,
+  y: number,
 }
 
 export type PropsPopup = {
-    items: Array<PopupItem>,
-    pos: Pos,
-    width: number,
+  items: Array<PopupItem>,
+  pos: Pos,
+  width: number,
 }
 
-export {
-    Popup
+
+const defVisible: boolean = false;
+const defValue: PropsPopup = {
+  items: [{caption: '<Пусто>', action: () => {}}],
+  pos: {x: 0, y: 0},
+  width: 100
+}
+const defParent: string = ""
+
+const PopupProps = {
+  visible: defVisible,
+  setVisible: (visible: boolean) => {},
+  value: defValue,
+  setValue: (value: PropsPopup) => {},
+  parent: defParent,
+  setParent: (parent: string) => {}
+}
+
+const PopupContext = React.createContext(PopupProps)
+
+function PopupLayer({ children }: any) {  
+  const[visible, setVisible] = useState(defVisible)
+  const[value, setValue] = useState(defValue)
+  const[parent, setParent] = useState(defParent)
+    
+  return (
+    <PopupContext.Provider value = {{visible, setVisible, value, setValue, parent, setParent}}>
+      { children }    
+    </PopupContext.Provider>
+  )
 }
 
 
 function Popup() {
-    const props = usePopup();
-    const setProps = useSetPopup();
-    const isVisible = IsVisiblePopup();
-    const setIsVisible = useSetIsVisiblePopup();
+  const {visible, setVisible, value, setValue} = useContext(PopupContext);
 
-    const style = {
-        top: props.pos.y,
-        left: props.pos.x,
-        width: props.width
-    }
+  const style = {
+      top: value.pos.y,
+      left: value.pos.x,
+      width: value.width
+  }
 
-    const className = "popup "+(isVisible ? "" : "popup_hide ")
+  const className = "popup "+(visible ? "" : "popup_hide ")
     
-    const listMenuItems = props.items.map((item, index) =>
-        <li key={index} className="popup__menu__item" onClick = {item.action}>{item.caption}</li>
-    );
+  const listMenuItems = value.items.map((item, index) =>
+    <li key={index} className="popup__menu__item" onMouseDown = {item.action}>{item.caption}</li>
+  )
 
-    return (
-        <div className = {className} style = {style} onClick={() => {setProps({...props}); setIsVisible(false)}}>
-            <ul className="popup__menu">
-                {listMenuItems}
-            </ul>
-        </div>
-    )
+  return (
+    <div className = {className} style = {style} onMouseDown={(e) => {e.preventDefault(); setVisible(false)}}>         
+      <ul className="popup__menu">
+        {listMenuItems}
+      </ul>
+    </div>
+  )
 }

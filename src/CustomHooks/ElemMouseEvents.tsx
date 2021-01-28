@@ -1,7 +1,8 @@
 import React, {useEffect, useRef} from 'react'
 import { store } from '..'
-import { checkSelectedElem, getCurrElemPosition, getCurrElemSize } from '../Models/CommonFunctions/supportFunctionsConst'
-import { MainProg, Point, Programm, Slide } from '../Models/CommonFunctions/types'
+import { checkSelectedElem, getCurrElemPosition, getCurrElemSize } from '../Models/CommonFunctions/supportFunctions/supportElemOperations'
+import { getSelectedSlides, getSlides } from '../Models/CommonFunctions/supportFunctions/supportSlideOperations'
+import { MainProg, Point, Programm, Slide } from '../Models/types'
 import { setSelectedElemsInHook } from './supportHooksFunctions'
 
 
@@ -69,12 +70,11 @@ function useDragAndDropElement(props: dragAndDropProps) {
     }  
   }
   
-  
+
   useEffect(() => {
     props.elemRef.current?.addEventListener('mousedown', mouseDownHandler)
     return () => props.elemRef.current?.removeEventListener('mousedown', mouseDownHandler)  
   })
-
 
   const mouseDownHandler = (event: React.MouseEvent | MouseEvent) => {
     if (props.canDeleteSlides) {
@@ -106,7 +106,6 @@ function useDragAndDropElement(props: dragAndDropProps) {
 
   const mouseMoveHandler = (event: React.MouseEvent | MouseEvent) => {
 
-
     const delta = {
       x: event.pageX - leftSvgBorder - startPos.x,
       y: event.pageY - topSvgBorder - startPos.y
@@ -134,6 +133,8 @@ interface resizeProps {
   selectedElements: Array<string>,
   selectedSlides: Array<string>,
   slides: Array<Slide>,  
+  borderWidth: number,
+  shapeType: string,
 
   setSelectedElement: (elemsArr: Array<string>) => void,
   resizeElement: (newWidth: number, newHeigth: number, newPosX: number, newPosY: number, id: string) => void,
@@ -191,7 +192,7 @@ function useReSizeElement(props: resizeProps) {
   })
 
   const addListnersPreventMouseDown = (event: React.MouseEvent | MouseEvent) => {
-    const selectedElemsLength = props.selectedElements.length
+    const selectedElemsLength = store.getState().mainProg.selectedElements.length
     if (!event.defaultPrevented) {
       if (selectedElemsLength > 1) {
         props.setSelectedElement([props.id])
@@ -225,12 +226,12 @@ function useReSizeElement(props: resizeProps) {
 
   const mouseMoveResizeHandler = (event: React.MouseEvent | MouseEvent) => {
   
-    const modelProgState = store.getState().mainProg
-    const slides = modelProgState.currentPresentation.slides
-    const selectedSlides = modelProgState.selectedSlides
+    const slides = getSlides()
+    const selectedSlides = getSelectedSlides()
 
     const modelElemSize = getCurrElemSize(slides, selectedSlides, props.id)
     const modelElemPosition = getCurrElemPosition(slides, selectedSlides, props.id)
+  
 
     newCursPos = {
       x: event.pageX - leftSvgBorder,
@@ -249,7 +250,7 @@ function useReSizeElement(props: resizeProps) {
     if(point === 2) {
       newElemPos = {
         x: modelElemPosition.x,
-        y: newCursPos.y
+        y: newCursPos.y 
       }
   
       newElemSize = {
@@ -277,8 +278,8 @@ function useReSizeElement(props: resizeProps) {
       }
 
       newElemSize = {
-        width: newCursPos.x - modelElemPosition.x,
-        height: newCursPos.y - modelElemPosition.y
+        width: newCursPos.x - modelElemPosition.x, 
+        height: newCursPos.y - modelElemPosition.y 
       }
     }
 
@@ -292,7 +293,6 @@ function useReSizeElement(props: resizeProps) {
   const mouseUpResizeHandler = () => {
     
     if (prevSizeRef.current.width !== newElemSize.width && prevSizeRef.current.height !== newElemSize.height) {
-          console.log('resize')
           props.resizeElement(
             newElemSize.width, 
             newElemSize.height, 
@@ -302,9 +302,9 @@ function useReSizeElement(props: resizeProps) {
           )  
     }
     prevSizeRef.current = newElemSize
+    
     document.removeEventListener('mousemove', mouseMoveResizeHandler)
     document.removeEventListener('mouseup', mouseUpResizeHandler) 
+
   }
 }
-
-

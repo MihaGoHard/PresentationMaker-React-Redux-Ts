@@ -7,12 +7,20 @@ import * as serviceWorker from './serviceWorker';
 
 import { createStore } from 'redux';
 import { connect, Provider } from 'react-redux';
-import { mainReducer } from './Models/Reducers/commonReducers';
+import { mainReducer } from './Models/Reducers/programmReducer';
 import { saveStateToArchive } from './Models/CommonFunctions/archive';
+import { goBackArchive, goForwardArchive } from './Models/ActionCreators/commonActionCreators';
+import { useCopyPasteListners, useFullScrinEvents, useSaveToArh, useUndoRedoListners } from './CustomHooks/CommonDifferentHooks';
 
 
 
 export const store = createStore(mainReducer)
+
+
+useSaveToArh()
+useUndoRedoListners()
+useCopyPasteListners()
+useFullScrinEvents()
 
 
 ReactDOM.render(
