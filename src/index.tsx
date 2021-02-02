@@ -10,17 +10,17 @@ import { connect, Provider } from 'react-redux';
 import { mainReducer } from './Models/Reducers/programmReducer';
 import { saveStateToArchive } from './Models/CommonFunctions/archive';
 import { goBackArchive, goForwardArchive } from './Models/ActionCreators/commonActionCreators';
-import { useCopyPasteListners, useFullScrinEvents, useSaveToArh, useUndoRedoListners } from './CustomHooks/CommonDifferentHooks';
+import { copyPasteListners, fullScrinEvents, saveToArh, undoRedoListners } from './CustomHooks/CommonDifferentHooks';
 
 
 
 export const store = createStore(mainReducer)
 
 
-useSaveToArh()
-useUndoRedoListners()
-useCopyPasteListners()
-useFullScrinEvents()
+saveToArh()
+undoRedoListners()
+copyPasteListners()
+fullScrinEvents()
 
 
 ReactDOM.render(

@@ -74,7 +74,7 @@ function useSetElemPropsAfterSlideChanged(props: changeElemProps) {
 }
 
 
-export function useSaveToArh() {
+export function saveToArh() {
   const newState = store.getState()
   saveStateToArchive(newState)
   saveState(newState)
@@ -88,7 +88,7 @@ export function useSaveToArh() {
   }) 
 }
 
-export function useUndoRedoListners() {
+export function undoRedoListners() {
   const undoListner = (event: KeyboardEvent) => {
     if(!store.getState().commonDeps.playerIsOpen) {
       if (event.code == 'KeyZ' && (event.ctrlKey || event.metaKey)) {
@@ -102,7 +102,7 @@ export function useUndoRedoListners() {
   document.addEventListener('keydown', undoListner)
 }
 
-export function useFullScrinEvents() {
+export function fullScrinEvents() {
   const fullScreenListner = (event: any) => {
     if (!document.fullscreenElement) {
       store.dispatch(setPlayerState('close'))
@@ -122,7 +122,7 @@ export function useFullScrinEvents() {
 }
 
 
-export function useCopyPasteListners() {   
+export function copyPasteListners() {   
   const copyPasteListner = (event: KeyboardEvent) => {
     const playerIsOpen = store.getState().commonDeps.playerIsOpen
     const canDeleteSlide = store.getState().commonDeps.canDeleteSlides

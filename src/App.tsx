@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import './App.css';
 import  HeaderPanel  from './View/HeaderPanel/HeaderPanel';
 import  SlidesPanel  from './View/SlidesPanel/SlidesPanel';
@@ -10,7 +10,7 @@ import { Programm } from './Models/types';
 import { setCanDeleteSlide } from './Models/ActionCreators/commonActionCreators';
 import { ColorPickerLayer, ColorPicker } from './View/ColorPicker/ColorPicker'; 
 import { PaletteLayer } from './View/Palette/Palette'; 
-import { useCopyPasteListners } from './CustomHooks/CommonDifferentHooks';
+import { copyPasteListners } from './CustomHooks/CommonDifferentHooks';
 import Modal, { ModalLayer } from './View/Modal/Modal'
 import { deleteSlides, setSelectedSlides } from './Models/ActionCreators/slideActionCreators';
 import { setSelectedElement, deleteSelectedElements } from './Models/ActionCreators/elemActionCreators';
